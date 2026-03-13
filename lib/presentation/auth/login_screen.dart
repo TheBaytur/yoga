@@ -1,4 +1,4 @@
-import 'package:antigravity/presentation/home/home_screen.dart';
+import 'package:antigravity/presentation/navigation/main_shell.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -305,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Navigate to Home Screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          builder: (context) => const MainShell(),
         ),
       );
     } else {

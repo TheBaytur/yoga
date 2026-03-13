@@ -44,7 +44,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 TextButton(
-                    onPressed: () => _controller.jumpToPage(2),
+                    onPressed: () {
+                      _controller.jumpToPage(2);
+                    },
                     child: const Text('Skip')),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -66,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onLastPage
                     ? ElevatedButton(
                         onPressed: () {
-                          // Complete onboarding
+                          Navigator.of(context).pop();
                         },
                         child: const Text('Done'))
                     : TextButton(
