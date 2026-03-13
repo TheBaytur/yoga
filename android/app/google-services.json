@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "423347789169",
+    "project_id": "my-yoga-app-sanctuary",
+    "storage_bucket": "my-yoga-app-sanctuary.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:423347789169:android:83a78458181bcf584eaad0",
+        "android_client_info": {
+          "package_name": "com.example.antigravity"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "423347789169-s8lafm9injj91c51cgie88pmk8cvbnju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0bqhO3-VowsEnsCDwamGI1B1UFtXc__0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "423347789169-s8lafm9injj91c51cgie88pmk8cvbnju.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "423347789169-659q6j69bhfkks5rs8tgc9anncoju56h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.antigravity"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
