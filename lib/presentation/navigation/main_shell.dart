@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'package:antigravity/presentation/home/home_screen.dart';
-import 'package:antigravity/presentation/navigation/calendar_screen.dart';
 import 'package:antigravity/presentation/navigation/discover_screen.dart';
 import 'package:antigravity/presentation/navigation/profile_screen.dart';
+import 'package:antigravity/presentation/navigation/progress_dashboard.dart';
+import 'package:antigravity/presentation/navigation/community_feed.dart';
+import 'package:antigravity/presentation/theme/zen_design_system.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -12,57 +15,61 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  int _currentIndex = 0;
+  int _selectedIndex = 0;
 
-  final List<Widget> _tabs = const [
-    HomeScreen(),
-    DiscoverScreen(),
-    CalendarScreen(),
-    ProfileScreen(),
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const DiscoverScreen(),
+    const ProgressDashboard(),
+    const CommunityFeed(),
+    const ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _tabs,
-      ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAF7F2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            offset: const Offset(0, -4),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: const Color(0xFF6B8A7A),
-        unselectedItemColor: Colors.grey[400],
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), label: 'Discover'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Calendar'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-        ],
+      backgroundColor: ZenColors.sand,
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SalomonBottomBar(
+          currentIndex: _selectedIndex,
+          onTap: (i) => setState(() => _selectedIndex = i),
+          selectedItemColor: ZenColors.sageGreen,
+          unselectedItemColor: ZenColors.slateGray.withOpacity(0.5),
+          items: [
+            SalomonBottomBarItem(
+              icon: const Icon(Icons.home_rounded),
+              title: const Text('Home'),
+            ),
+            SalomonBottomBarItem(
+              icon: const Icon(Icons.explore_rounded),
+              title: const Text('Library'),
+            ),
+            SalomonBottomBarItem(
+              icon: const Icon(Icons.analytics_rounded),
+              title: const Text('AI Cam'),
+            ),
+            SalomonBottomBarItem(
+              icon: const Icon(Icons.people_rounded),
+              title: const Text('Community'),
+            ),
+            SalomonBottomBarItem(
+              icon: const Icon(Icons.person_rounded),
+              title: const Text('Profile'),
+            ),
+          ],
+        ),
       ),
     );
   }

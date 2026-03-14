@@ -22,6 +22,27 @@ class YogaPoseAnalyzer {
     return await _poseDetector.processImage(inputImage);
   }
 
+  String getFeedback(Pose pose) {
+    final leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+    final rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
+    final leftElbow = pose.landmarks[PoseLandmarkType.leftElbow];
+    final rightElbow = pose.landmarks[PoseLandmarkType.rightElbow];
+    final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+
+    if (leftShoulder == null || rightShoulder == null) return "Adjusting view...";
+
+    // Simple height check
+    if (leftShoulder.y < 100) return "Lower your shoulders";
+
+    // Check arm extension
+    if (leftElbow != null && rightElbow != null) {
+      final armAngle = calculateAngle(leftShoulder, leftElbow, leftHip!); // Example
+      if (armAngle < 160) return "Straighten your arms";
+    }
+
+    return "Great form! Hold it.";
+  }
+
   void dispose() {
     _poseDetector.close();
   }

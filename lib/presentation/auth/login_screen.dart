@@ -1,5 +1,7 @@
-import 'package:antigravity/presentation/navigation/main_shell.dart';
+import 'package:antigravity/domain/auth/auth_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +12,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  bool _isSignUp = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _errorMessage;
@@ -23,6 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool showAppleSignIn =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAF7F2), // Light beige
       body: SafeArea(
@@ -116,26 +123,57 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Login Button
                 ElevatedButton(
-                  onPressed: _handleLogin,
+                  onPressed: _isLoading ? null : _handleEmailAuth,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6B8A7A), // Sage Green
                     foregroundColor: Colors.white,
                     elevation: 4,
-                    shadowColor: const Color(0xFF6B8A7A).withOpacity(0.4),
+                    shadowColor: const Color(0xFF6B8A7A).withValues(alpha: 0.4),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          _isSignUp ? 'Create Account' : 'Login',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 32),
+
+                // Toggle Sign Up / Login
+                Center(
+                  child: TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            setState(() {
+                              _isSignUp = !_isSignUp;
+                              _errorMessage = null;
+                            });
+                          },
+                    child: Text(
+                      _isSignUp ? 'Already have an account? Sign in' : 'Create an account',
+                      style: const TextStyle(
+                        color: Color(0xFF6B8A7A),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
 
                 // OR Divider
                 Row(
@@ -158,13 +196,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
 
                 // Apple Button
-                _buildSocialButton(
-                  text: 'Continue with Apple',
-                  icon: Icons.apple,
-                  backgroundColor: Colors.black,
-                  textColor: Colors.white,
-                ),
-                const SizedBox(height: 16),
+                if (showAppleSignIn) ...[
+                  _buildSocialButton(
+                    text: 'Continue with Apple',
+                    icon: Icons.apple,
+                    backgroundColor: Colors.black,
+                    textColor: Colors.white,
+                    onPressed: _isLoading ? null : _handleAppleSignIn,
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // Google Button (using a placeholder icon color)
                 _buildSocialButton(
@@ -174,6 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   textColor: Colors.black87,
                   isGoogle: true,
                   borderColor: Colors.grey[300],
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
                 ),
                 
                 const SizedBox(height: 48),
@@ -197,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -241,9 +283,10 @@ class _LoginScreenState extends State<LoginScreen> {
     required Color textColor,
     Color? borderColor,
     bool isGoogle = false,
+    VoidCallback? onPressed,
   }) {
     return OutlinedButton(
-      onPressed: () {},
+      onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         backgroundColor: backgroundColor,
         side: BorderSide(color: borderColor ?? Colors.transparent, width: 1),
@@ -282,13 +325,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleLogin() {
+  Future<void> _handleEmailAuth() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-
-    // Test credentials
-    const testEmail = 'test@example.com';
-    const testPassword = 'password123';
 
     if (email.isEmpty || password.isEmpty) {
       setState(() {
@@ -297,20 +336,77 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (email == testEmail && password == testPassword) {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      if (_isSignUp) {
+        await AuthService.signUpWithEmail(email, password);
+      } else {
+        await AuthService.signInWithEmail(email, password);
+      }
+    } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorMessage = null;
+        _errorMessage = e.message ?? 'Authentication failed.';
       });
-      
-      // Navigate to Home Screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const MainShell(),
-        ),
-      );
-    } else {
+    } catch (_) {
       setState(() {
-        _errorMessage = 'Invalid email or password. Use test@example.com / password123';
+        _errorMessage = 'Authentication failed.';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await AuthService.signInWithGoogle();
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message ?? 'Google sign-in failed.';
+      });
+    } catch (_) {
+      setState(() {
+        _errorMessage = 'Google sign-in failed.';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await AuthService.signInWithApple();
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message ?? 'Apple sign-in failed.';
+      });
+    } catch (_) {
+      setState(() {
+        _errorMessage = 'Apple sign-in failed.';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
       });
     }
   }

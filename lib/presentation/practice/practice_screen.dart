@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:antigravity/presentation/practice/widgets/adaptive_video_player.dart';
+import 'package:antigravity/presentation/practice/widgets/audio_guidance_player.dart';
+import 'package:antigravity/domain/models/yoga_session.dart';
 import 'package:antigravity/domain/pose_logic.dart';
 
 class PracticeScreen extends StatefulWidget {
-  const PracticeScreen({super.key});
+  final YogaSession session;
+  const PracticeScreen({super.key, required this.session});
 
   @override
   State<PracticeScreen> createState() => _PracticeScreenState();
@@ -13,8 +17,10 @@ class PracticeScreen extends StatefulWidget {
 class _PracticeScreenState extends State<PracticeScreen> {
   CameraController? _cameraController;
   final YogaPoseAnalyzer _poseAnalyzer = YogaPoseAnalyzer();
+  final AudioGuidancePlayer _audioPlayer = AudioGuidancePlayer();
   List<Pose> _poses = [];
   bool _isProcessing = false;
+  bool _isAudioOnly = false;
   String _feedbackText = "Position yourself in frame";
 
   @override
@@ -25,7 +31,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
-    // Prefer front camera
     final frontCamera = cameras.firstWhere(
       (camera) => camera.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
@@ -33,7 +38,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     _cameraController = CameraController(
       frontCamera,
-      ResolutionPreset.low,
+      ResolutionPreset.medium,
       enableAudio: false,
     );
 
@@ -68,7 +73,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
         });
       }
     } catch (e) {
-      debugPrint("Error processing pose: \$e");
+      debugPrint("Error processing pose: $e");
     } finally {
       _isProcessing = false;
     }
@@ -80,19 +85,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
       return;
     }
 
-    // Simplistic analysis example. You can add more complex logic here.
     final pose = poses.first;
-    
-    // Check if shoulders are visible as a basic check
-    final leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    final rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-
-    if (leftShoulder != null && rightShoulder != null && 
-        leftShoulder.likelihood > 0.8 && rightShoulder.likelihood > 0.8) {
-      _feedbackText = "Perfect! Hold for 5s";
-    } else {
-      _feedbackText = "Straighten your back";
-    }
+    // Basic analysis using our helper (Phase 3 expansion)
+    final feedback = _poseAnalyzer.getFeedback(pose);
+    setState(() {
+      _feedbackText = feedback;
+    });
   }
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {
@@ -103,21 +101,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
     if (rotation == null) return null;
 
     final format = InputImageFormatValue.fromRawValue(image.format.raw as int);
-    // On web or some platforms format might be missing, handling basic android/ios here
-    if (format == null && image.format.raw != null) {
-        // Fallback or skip if format unsupported
-    }
-
-    // This is a simplified input image creation. It's often more complex depending on platform (iOS/Android BGRA/YUV).
-    // For a robust implementation, the google_mlkit_pose_detection example code provides a full mapping.
-    // Assuming format is natively supported by MLKit (like nv21/yuv420 or bgra8888).
     
     return InputImage.fromBytes(
-      bytes: image.planes[0].bytes, // Only using first plane for simplicity in this example
+      bytes: image.planes[0].bytes,
       metadata: InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: rotation,
-        format: format ?? InputImageFormat.yuv_420_888, // Defaulting as example
+        format: format ?? InputImageFormat.yuv_420_888,
         bytesPerRow: image.planes[0].bytesPerRow,
       ),
     );
@@ -128,6 +118,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _cameraController?.stopImageStream();
     _cameraController?.dispose();
     _poseAnalyzer.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -145,36 +136,81 @@ class _PracticeScreenState extends State<PracticeScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Live Video Feed
-          CameraPreview(_cameraController!),
+          // 1. Video Layer (Adaptive OR Audio Only)
+          if (!_isAudioOnly)
+            AdaptiveVideoPlayer(session: widget.session)
+          else
+            const Center(
+              child: Icon(Icons.graphic_eq, color: Color(0xFF6B8A7A), size: 120),
+            ),
+
+          // 2. Camera Overlay
+          if (_isAudioOnly)
+            Positioned(
+              top: 60,
+              right: 20,
+              child: SizedBox(
+                width: 120,
+                height: 180,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: CameraPreview(_cameraController!),
+                ),
+              ),
+            )
+          else
+            CameraPreview(_cameraController!),
           
-          // 2. Skeletal Overlay
+          // 3. Skeletal Overlay
           CustomPaint(
             painter: PosePainter(
               _poses,
               Size(_cameraController!.value.previewSize!.height, _cameraController!.value.previewSize!.width),
-              // Camera on most mobile devices is rotated 90 deg usually. Need size mapped.
               _cameraController!.description.lensDirection,
             ),
           ),
           
-          // 3. User Guidance
+          // 4. Controls & Guidance
           Positioned(
-            bottom: 50,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(30),
+            bottom: 40,
+            left: 20,
+            right: 20,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: const Color(0xFF6B8A7A), width: 1),
+                  ),
+                  child: Text(
+                    _feedbackText,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                child: Text(
-                  _feedbackText,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _ActionButton(
+                      icon: _isAudioOnly ? Icons.videocam : Icons.graphic_eq,
+                      label: _isAudioOnly ? "Video" : "Audio Only",
+                      onPressed: () {
+                        setState(() {
+                          _isAudioOnly = !_isAudioOnly;
+                          if (_isAudioOnly) {
+                            _audioPlayer.playSessionAudio(widget.session);
+                          } else {
+                            _audioPlayer.stop();
+                          }
+                        });
+                      },
+                    ),
+                  ],
                 ),
-              ),
+              ],
             ),
           ),
           
@@ -182,8 +218,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
           Positioned(
             top: 50,
             left: 20,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+            child: FloatingActionButton.small(
+              backgroundColor: Colors.black38,
+              child: const Icon(Icons.close, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
           )
@@ -193,7 +230,32 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 }
 
-// Simple Painter for Pose Overlay
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _ActionButton({required this.icon, required this.label, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        IconButton.filled(
+          style: IconButton.styleFrom(
+            backgroundColor: const Color(0xFF6B8A7A),
+            foregroundColor: Colors.white,
+          ),
+          icon: Icon(icon),
+          onPressed: onPressed,
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+      ],
+    );
+  }
+}
+
 class PosePainter extends CustomPainter {
   final List<Pose> poses;
   final Size absoluteImageSize;
@@ -209,27 +271,26 @@ class PosePainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4.0
-      ..color = Colors.greenAccent;
+      ..color = const Color(0xFF6B8A7A);
 
     for (final pose in poses) {
       pose.landmarks.forEach((_, landmark) {
         canvas.drawCircle(
           Offset(
             cameraLensDirection == CameraLensDirection.front 
-                ? size.width - (landmark.x * scaleX) // mirror for front camera
+                ? size.width - (landmark.x * scaleX)
                 : landmark.x * scaleX,
             landmark.y * scaleY,
           ),
-          5,
+          4,
           paint..style = PaintingStyle.fill,
         );
       });
-      // Additional lines connecting joints could be drawn here.
     }
   }
 
   @override
   bool shouldRepaint(covariant PosePainter oldDelegate) {
-    return oldDelegate.poses != poses;
+    return true;
   }
 }

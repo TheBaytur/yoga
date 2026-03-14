@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:antigravity/domain/models/yoga_session.dart';
 import 'package:antigravity/presentation/practice/practice_screen.dart';
+import 'package:antigravity/presentation/theme/zen_design_system.dart';
+import 'package:antigravity/presentation/home/widgets/zen_progress_ring.dart';
+import 'package:antigravity/presentation/home/widgets/flow_state_card.dart';
+import 'package:antigravity/presentation/home/widgets/zen_stat_chip.dart';
+import 'package:antigravity/presentation/home/widgets/library_carousel.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,360 +14,240 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2), // Light beige
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              _HeaderSection(),
-              SizedBox(height: 32),
-              _ContinuePracticeSection(),
-              SizedBox(height: 32),
-              _FeaturedCollectionsSection(),
-              SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderSection extends StatelessWidget {
-  const _HeaderSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'THE SANCTUARY',
-                style: TextStyle(
-                  fontFamily: 'Georgia', // Serif font for elegance
-                  fontSize: 18,
-                  letterSpacing: 2.0,
-                  color: const Color(0xFF6B8A7A), // Sage Green
-                  fontWeight: FontWeight.w500,
-                ),
+      backgroundColor: ZenColors.sand,
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildAppBar(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(ZenTheme.paddingLarge),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildGreetingSection(),
+                  const SizedBox(height: 32),
+                  _buildFlowStateSection(context),
+                  const SizedBox(height: 32),
+                  _buildWeeklyVitalsSection(),
+                  const SizedBox(height: 32),
+                  _buildLibrarySections(context),
+                  const SizedBox(height: 32),
+                  _buildLiveIndicator(),
+                  const SizedBox(height: 40),
+                ],
               ),
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: const Color(0xFFE5D5C5), // Soft brown/beige
-                child: const Text('S', style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          Text(
-            'Good morning, Sarah',
-            style: TextStyle(
-              fontFamily: 'Georgia',
-              fontSize: 32,
-              color: const Color(0xFF4A5D53), // Darker Sage
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Ready for your practice?',
-            style: TextStyle(
-              fontSize: 16,
-              color: const Color(0xFFA67B5B), // Earthy brown/dusty orange
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: 40,
-            height: 2,
-            decoration: BoxDecoration(
-              color: const Color(0xFFA67B5B).withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(2),
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class _ContinuePracticeSection extends StatelessWidget {
-  const _ContinuePracticeSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(
-            'Continue Practice',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF6B8A7A), // Sage
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      expandedHeight: 80,
+      backgroundColor: ZenColors.sand,
+      elevation: 0,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.symmetric(horizontal: ZenTheme.paddingLarge, vertical: 16),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const CircleAvatar(
+              radius: 18,
+              backgroundImage: NetworkImage('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop'),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            itemCount: 3,
-            itemBuilder: (context, index) {
-              final titles = ['Morning Flow', 'Vinyasa Balance', 'Evening Wind Down'];
-              final times = ['15 min', '25 min', '10 min'];
-              final tags = ['Sage Green/Beige', 'Earthy tones', 'Dusty Rose'];
-              final progress = [0.7, 0.3, 0.1];
-              
-              return GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const PracticeScreen(),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 260,
-                  margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
-                        ),
-                        child: Image.network(
-                          'https://picsum.photos/seed/yoga${index}a/400/200',
-                          height: 100,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  titles[index],
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  times[index],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[500],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              tags[index],
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: LinearProgressIndicator(
-                                      value: progress[index],
-                                      backgroundColor: Colors.grey[200],
-                                      valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF6B8A7A)),
-                                      minHeight: 4,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '\${(progress[index] * 100).toInt()}%',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FeaturedCollectionsSection extends StatelessWidget {
-  const _FeaturedCollectionsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(
-            'Featured Collections',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF6B8A7A), // Sage
+            IconButton(
+              icon: const Icon(Icons.notifications_none_rounded, color: ZenColors.deepTeal),
+              onPressed: () {},
             ),
-          ),
+          ],
         ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 320,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            itemCount: 3,
-            itemBuilder: (context, index) {
-              final titles = ['Awaken & Flow Collection', 'Find Your Zen: Meditation', 'Strength & Flexibility'];
-              final subtitles = ['6 sessions', '5 classes', '8 practices'];
-              final descriptions = [
-                'Cultivate energy and balance your breath.',
-                'Cultivate deep relaxation and focus.',
-                'Build core strength and improve mobility.'
-              ];
-              
-              return Container(
-                width: 280,
-                margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                      child: Image.network(
-                        'https://picsum.photos/seed/yogacollect$index/400/250',
-                        height: 160,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            titles[index],
-                            style: const TextStyle(
-                              fontFamily: 'Georgia',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 18,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            subtitles[index],
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              _buildTag(index == 0 ? 'SAGE GREEN' : 'DUSTY ROSE', index == 0 ? const Color(0xFF6B8A7A) : const Color(0xFFC49A94)),
-                              const SizedBox(width: 8),
-                              _buildTag('BEIGE', const Color(0xFFE5D5C5)),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            descriptions[index],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: color,
+    );
+  }
+
+  Widget _buildGreetingSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good morning, Sarah.',
+                style: GoogleFonts.lora(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: ZenColors.deepTeal,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Your path to balance starts here.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: ZenColors.slateGray.withOpacity(0.8),
+                ),
+              ),
+            ],
+          ),
         ),
+        const ZenProgressRing(
+          progress: 0.65,
+          size: 70,
+          label: 'Today\'s Goal',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFlowStateSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Next in Your Flow',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: ZenColors.deepTeal,
+          ),
+        ),
+        const SizedBox(height: 16),
+        FlowStateCard(
+          title: 'Morning Sun Salutation',
+          duration: '15 min',
+          level: 'Beginner',
+          imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
+          onResume: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PracticeScreen(
+                  session: YogaSession(
+                    id: 'morning_flow',
+                    title: 'Morning Sun Salutation',
+                    videoUrl: '', // Dummy for now
+                    thumbnailUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
+                    instructor: 'Elena Brower',
+                    level: Difficulty.beginner,
+                    duration: const Duration(minutes: 15),
+                    hlsVideoUrl: 'https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da39574d72b.m3u8',
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyVitalsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Weekly Vitals',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: ZenColors.deepTeal,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 70,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            children: const [
+              ZenStatChip(emoji: '🔥', value: '5 days', label: 'Streak'),
+              SizedBox(width: 12),
+              ZenStatChip(emoji: '🧘', value: '120m', label: 'Total Practice'),
+              SizedBox(width: 12),
+              ZenStatChip(emoji: '🎯', value: '88%', label: 'Pose Accuracy'),
+              SizedBox(width: 12),
+              ZenStatChip(emoji: '⚡', value: '450', label: 'Calories'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLibrarySections(BuildContext context) {
+    final mockSessions = [
+      YogaSession(
+        id: '1',
+        title: 'Deep Core Strength',
+        videoUrl: '',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400',
+        instructor: 'Sarah J.',
+        level: Difficulty.intermediate,
+        duration: const Duration(minutes: 20),
+      ),
+      YogaSession(
+        id: '2',
+        title: 'Stress Relief Yoga',
+        videoUrl: '',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1510894347713-fc3ad6cb03?w=400',
+        instructor: 'Michael R.',
+        level: Difficulty.beginner,
+        duration: const Duration(minutes: 10),
+      ),
+    ];
+
+    return Column(
+      children: [
+        LibraryCarousel(
+          title: 'For You',
+          sessions: mockSessions,
+          onSessionTap: (s) {},
+        ),
+        const SizedBox(height: 24),
+        LibraryCarousel(
+          title: 'Quick Hits',
+          sessions: mockSessions,
+          onSessionTap: (s) {},
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLiveIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ZenColors.sageGreen.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(ZenTheme.radiusMedium),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.people_outline, color: ZenColors.sageGreen, size: 20),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              'Join 1,240 others practicing \'Solar Power Flow\' right now.',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: ZenColors.deepTeal,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

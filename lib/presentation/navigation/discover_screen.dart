@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:antigravity/presentation/practice/practice_screen.dart';
+import 'package:antigravity/domain/models/yoga_session.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
@@ -34,7 +35,19 @@ class DiscoverScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PracticeScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => PracticeScreen(
+                      session: YogaSession(
+                    id: '1',
+                    title: 'Vinyasa Flow',
+                    videoUrl: '',
+                    thumbnailUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400',
+                    instructor: 'Elena Brower',
+                    level: Difficulty.beginner,
+                    duration: const Duration(minutes: 20),
+                  ),
+                    ),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
