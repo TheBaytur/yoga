@@ -6,53 +6,64 @@ class ZenProgressRing extends StatelessWidget {
   final double progress; // 0.0 to 1.0
   final double size;
   final String label;
+  final VoidCallback? onTap;
 
   const ZenProgressRing({
     super.key,
     required this.progress,
-    this.size = 60,
+    this.size = 80,
     required this.label,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: progress),
-      duration: const Duration(milliseconds: 1500),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Column(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(size),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: size,
               height: size,
-              child: CustomPaint(
-                painter: _ProgressPainter(
-                  progress: value,
-                  color: ZenColors.sageGreen,
-                  backgroundColor: ZenColors.sageGreen.withOpacity(0.1),
-                ),
-                child: Center(
-                  child: Text(
-                    '${(value * 100).toInt()}%',
+              width: size,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    size: Size(size, size),
+                    painter: _ProgressPainter(
+                      progress: progress,
+                      color: ZenColors.sageGreen,
+                      backgroundColor: ZenColors.sageGreen.withOpacity(0.1),
+                      strokeWidth: size * 0.1,
+                    ),
+                  ),
+                  Text(
+                    '${(progress * 100).toInt()}%',
                     style: TextStyle(
-                      fontSize: size * 0.25,
+                      fontSize: size * 0.2,
                       fontWeight: FontWeight.bold,
                       color: ZenColors.deepTeal,
                     ),
                   ),
-                ),
+                ],
               ),
             ),
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(fontSize: 12, color: ZenColors.slateGray),
+              style: TextStyle(
+                fontSize: 10,
+                color: ZenColors.slateGray.withOpacity(0.6),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -61,18 +72,19 @@ class _ProgressPainter extends CustomPainter {
   final double progress;
   final Color color;
   final Color backgroundColor;
+  final double strokeWidth;
 
   _ProgressPainter({
     required this.progress,
     required this.color,
     required this.backgroundColor,
+    required this.strokeWidth,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width / 2, size.height / 2);
-    const strokeWidth = 6.0;
 
     // Draw background
     final bgPaint = Paint()
@@ -102,6 +114,6 @@ class _ProgressPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ProgressPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.strokeWidth != strokeWidth;
   }
 }

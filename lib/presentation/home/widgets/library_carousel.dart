@@ -6,12 +6,14 @@ class LibraryCarousel extends StatelessWidget {
   final String title;
   final List<YogaSession> sessions;
   final Function(YogaSession) onSessionTap;
+  final VoidCallback? onSeeAll;
 
   const LibraryCarousel({
     super.key,
     required this.title,
     required this.sessions,
     required this.onSessionTap,
+    this.onSeeAll,
   });
 
   @override
@@ -33,7 +35,7 @@ class LibraryCarousel extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: onSeeAll,
                 child: const Text('See all', style: TextStyle(color: ZenColors.sageGreen)),
               ),
             ],

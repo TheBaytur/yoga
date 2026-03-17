@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:antigravity/domain/models/yoga_session.dart';
 import 'package:antigravity/presentation/practice/practice_screen.dart';
 import 'package:antigravity/presentation/theme/zen_design_system.dart';
@@ -6,32 +7,33 @@ import 'package:antigravity/presentation/home/widgets/zen_progress_ring.dart';
 import 'package:antigravity/presentation/home/widgets/flow_state_card.dart';
 import 'package:antigravity/presentation/home/widgets/zen_stat_chip.dart';
 import 'package:antigravity/presentation/home/widgets/library_carousel.dart';
+import 'package:antigravity/presentation/navigation/navigation_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: ZenColors.sand,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          _buildAppBar(),
+          _buildAppBar(ref),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(ZenTheme.paddingLarge),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildGreetingSection(),
+                  _buildGreetingSection(ref),
                   const SizedBox(height: 32),
                   _buildFlowStateSection(context),
                   const SizedBox(height: 32),
                   _buildWeeklyVitalsSection(),
                   const SizedBox(height: 32),
-                  _buildLibrarySections(context),
+                  _buildLibrarySections(context, ref),
                   const SizedBox(height: 32),
                   _buildLiveIndicator(),
                   const SizedBox(height: 40),
@@ -44,7 +46,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(WidgetRef ref) {
     return SliverAppBar(
       expandedHeight: 80,
       backgroundColor: ZenColors.sand,
@@ -55,13 +57,19 @@ class HomeScreen extends StatelessWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop'),
+            GestureDetector(
+              onTap: () => ref.read(navigationProvider.notifier).state = 4, // Profile tab
+              child: const CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop'),
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.notifications_none_rounded, color: ZenColors.deepTeal),
-              onPressed: () {},
+              onPressed: () {
+                // Placeholder for notifications
+                debugPrint('Notifications tapped');
+              },
             ),
           ],
         ),
@@ -69,7 +77,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGreetingSection() {
+  Widget _buildGreetingSection(WidgetRef ref) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -96,10 +104,11 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        const ZenProgressRing(
+        ZenProgressRing(
           progress: 0.65,
           size: 70,
           label: 'Today\'s Goal',
+          onTap: () => ref.read(navigationProvider.notifier).state = 2, // Progress tab
         ),
       ],
     );
@@ -180,7 +189,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLibrarySections(BuildContext context) {
+  Widget _buildLibrarySections(BuildContext context, WidgetRef ref) {
     final mockSessions = [
       YogaSession(
         id: '1',
@@ -202,18 +211,33 @@ class HomeScreen extends StatelessWidget {
       ),
     ];
 
+    void onSessionTap(YogaSession session) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PracticeScreen(session: session),
+        ),
+      );
+    }
+
+    void onSeeAll() {
+      ref.read(navigationProvider.notifier).state = 1; // Discover tab
+    }
+
     return Column(
       children: [
         LibraryCarousel(
           title: 'For You',
           sessions: mockSessions,
-          onSessionTap: (s) {},
+          onSessionTap: onSessionTap,
+          onSeeAll: onSeeAll,
         ),
         const SizedBox(height: 24),
         LibraryCarousel(
           title: 'Quick Hits',
           sessions: mockSessions,
-          onSessionTap: (s) {},
+          onSessionTap: onSessionTap,
+          onSeeAll: onSeeAll,
         ),
       ],
     );

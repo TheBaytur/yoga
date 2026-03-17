@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:confetti/confetti.dart';
+import 'package:antigravity/presentation/theme/zen_design_system.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProgressDashboard extends StatefulWidget {
   const ProgressDashboard({super.key});
@@ -27,39 +29,41 @@ class _ProgressDashboardState extends State<ProgressDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F2),
-      appBar: AppBar(
-        title: const Text('Your Progress', style: TextStyle(color: Color(0xFF4A5D53))),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF4A5D53)),
-      ),
+      backgroundColor: ZenColors.sand,
       body: Stack(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStreakCard(),
-                const SizedBox(height: 24),
-                const Text(
-                  'Weekly Activity',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF6B8A7A)),
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildAppBar(),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(ZenTheme.paddingLarge),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildStreakCard(),
+                      const SizedBox(height: 32),
+                      _buildSectionTitle('Weekly Activity'),
+                      const SizedBox(height: 16),
+                      _buildActivityChart(),
+                      const SizedBox(height: 32),
+                      _buildSectionTitle('Soul Milestones'),
+                      const SizedBox(height: 16),
+                      _buildMilestoneList(),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                _buildActivityChart(),
-                const SizedBox(height: 32),
-                _buildMilestoneList(),
-              ],
-            ),
+              ),
+            ],
           ),
           Align(
             alignment: Alignment.center,
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
-              colors: const [Color(0xFF6B8A7A), Color(0xFFA67B5B), Color(0xFFC49A94)],
+              colors: const [ZenColors.sageGreen, ZenColors.deepTeal, ZenColors.sand],
             ),
           ),
         ],
@@ -67,34 +71,82 @@ class _ProgressDashboardState extends State<ProgressDashboard> {
     );
   }
 
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      backgroundColor: ZenColors.sand,
+      elevation: 0,
+      pinned: true,
+      centerTitle: false,
+      title: Text(
+        'Your Path',
+        style: GoogleFonts.lora(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: ZenColors.deepTeal,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: ZenColors.deepTeal,
+      ),
+    );
+  }
+
   Widget _buildStreakCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF6B8A7A),
-        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [ZenColors.sageGreen, ZenColors.deepTeal],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(ZenTheme.radiusLarge),
+        boxShadow: [
+          BoxShadow(
+            color: ZenColors.deepTeal.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_fire_department, color: Colors.white, size: 40),
-          const SizedBox(width: 16),
+          const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 48),
+          const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('7 Day Streak!', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                Text('You are in the top 5% this week.', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
+                const Text(
+                  '7 Day Bloom',
+                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Your consistency is inspiring.',
+                  style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14),
+                ),
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () => _confettiController.play(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white24,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          Material(
+            color: Colors.white24,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: () => _confettiController.play(),
+              borderRadius: BorderRadius.circular(12),
+              child: const Padding(
+                padding: EdgeInsets.all(12),
+                child: Icon(Icons.celebration_rounded, color: Colors.white),
+              ),
             ),
-            child: const Text('Celebrate', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -102,13 +154,25 @@ class _ProgressDashboardState extends State<ProgressDashboard> {
   }
 
   Widget _buildActivityChart() {
-    return SizedBox(
-      height: 200,
+    return Container(
+      height: 240,
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(ZenTheme.radiusLarge),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
           maxY: 60,
-          barTouchData: BarTouchData(enabled: false),
+          barTouchData: BarTouchData(enabled: true),
           titlesData: FlTitlesData(
             show: true,
             bottomTitles: AxisTitles(
@@ -116,7 +180,13 @@ class _ProgressDashboardState extends State<ProgressDashboard> {
                 showTitles: true,
                 getTitlesWidget: (double value, TitleMeta meta) {
                   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                  return Text(days[value.toInt()], style: const TextStyle(fontSize: 12));
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      days[value.toInt()],
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZenColors.slateGray),
+                    ),
+                  );
                 },
               ),
             ),
@@ -133,7 +203,7 @@ class _ProgressDashboardState extends State<ProgressDashboard> {
             _makeGroupData(3, 20),
             _makeGroupData(4, 40),
             _makeGroupData(5, 10),
-            _makeGroupData(6, 0),
+            _makeGroupData(6, 15),
           ],
         ),
       ),
@@ -146,7 +216,7 @@ class _ProgressDashboardState extends State<ProgressDashboard> {
       barRods: [
         BarChartRodData(
           toY: y,
-          color: const Color(0xFF6B8A7A),
+          color: x == 6 ? ZenColors.sageGreen : ZenColors.deepTeal.withOpacity(0.3),
           width: 16,
           borderRadius: BorderRadius.circular(4),
         ),
@@ -156,26 +226,34 @@ class _ProgressDashboardState extends State<ProgressDashboard> {
 
   Widget _buildMilestoneList() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Achieved Milestones', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF6B8A7A))),
-        const SizedBox(height: 16),
-        _buildMilestoneTile('Early Bird', 'First session before 7 AM', Icons.wb_sunny),
-        _buildMilestoneTile('Pose Master', 'Held Warrior II for 2 minutes', Icons.accessibility_new),
-        _buildMilestoneTile('Zen Master', 'Completed 10 meditation sessions', Icons.self_improvement),
+        _buildMilestoneTile('Early Bird', 'Practice before 7 AM', Icons.wb_sunny_rounded),
+        _buildMilestoneTile('Soul Sync', 'Held Warrior II for 2 minutes', Icons.accessibility_new_rounded),
+        _buildMilestoneTile('Zen Flow', '10 meditation sessions', Icons.self_improvement_rounded),
       ],
     );
   }
 
   Widget _buildMilestoneTile(String title, String subtitle, IconData icon) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: const Color(0xFFE5D5C5),
-        child: Icon(icon, color: const Color(0xFFA67B5B)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(ZenTheme.radiusMedium),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.check_circle, color: Color(0xFF6B8A7A)),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: ZenColors.sand,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: ZenColors.sageGreen),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        trailing: const Icon(Icons.check_circle_rounded, color: ZenColors.sageGreen, size: 24),
+      ),
     );
   }
 }
